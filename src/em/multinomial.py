@@ -49,7 +49,6 @@ def em(obsMat, priorsVecs, tol=1e-6, iterations=10000):
     return priorsVecs
             
 def multinomial_E_M_steps(obsMat, priorsVecs):
-    nVars = len(priorsVecs[0])
     nPriors = len(priorsVecs)
     priorMStep = np.zeros(np.shape(priorsVecs))
     for obsVec in obsMat:
