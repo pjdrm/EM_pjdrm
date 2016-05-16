@@ -2,20 +2,28 @@ import math
 import numpy as np
 
 class Multinomial(object):
-    def __init__(self, params):
+    def __init__(self, params, pmfType = "reg"):
         self._params = params
-
+        self.pmfType = pmfType
+    
     def pmf(self, counts):
+        if self.pmfType == "reg":
+            return self.reg_pmf(counts)
+        elif self.pmfType == "log":
+            return self.log_pmf(counts)
+        
+    def reg_pmf(self, counts):
         counts = counts.astype(int)
         if not(len(counts)==len(self._params)):
             raise ValueError("Dimensionality of count vector is incorrect")
         prob = 1.
         for i,c in enumerate(counts):
             prob *= self._params[i]**counts[i]
-
+        
         return prob * math.exp(self._log_multinomial_coeff(counts))
 
     def log_pmf(self,counts):
+        counts = counts.astype(int)
         if not(len(counts)==len(self._params)):
             raise ValueError("Dimensionality of count vector is incorrect")
         prob = 0.
@@ -31,11 +39,11 @@ class Multinomial(object):
             raise ValueError("Can only compute the factorial of positive ints")
         return sum(math.log(n) for n in range(1,num+1))
     
-def em(obsMat, priorsVecs, tol=1e-6, iterations=10000):
+def em(obsMat, priorsVecs, tol=1e-6, iterations=10000, pmfType = "reg"):
     iteration = 0
     while iteration < iterations:
         print "Iteration %d of EM" % (iteration)
-        new_priorVecs = multinomial_E_M_steps(obsMat, priorsVecs)
+        new_priorVecs = multinomial_E_M_steps(obsMat, priorsVecs, pmfType)
         priorsVecs = new_priorVecs
         iteration+=1
         '''
@@ -48,14 +56,14 @@ def em(obsMat, priorsVecs, tol=1e-6, iterations=10000):
         '''
     return priorsVecs
             
-def multinomial_E_M_steps(obsMat, priorsVecs):
+def multinomial_E_M_steps(obsMat, priorsVecs, pmfType = "reg"):
     nPriors = len(priorsVecs)
     priorMStep = np.zeros(np.shape(priorsVecs))
     for obsVec in obsMat:
         priorUpdates = np.zeros(nPriors)
         priorNorm = 0.0
         for i, priorVec in enumerate(priorsVecs):
-            pmf = pmf_obs(obsVec, priorVec)
+            pmf = pmf_obs(obsVec, priorVec, pmfType)
             priorUpdates[i] = pmf
             priorNorm += pmf
         priorUpdates = priorUpdates / priorNorm
@@ -70,6 +78,6 @@ def normalizeMatrix(mat):
         mat[i] = mat[i] / n
     return mat
         
-def pmf_obs(obsVec, priorVec):
-    m = Multinomial(priorVec)
+def pmf_obs(obsVec, priorVec, pmfType = "reg"):
+    m = Multinomial(priorVec, pmfType)
     return m.pmf(obsVec)

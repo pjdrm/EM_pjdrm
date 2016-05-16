@@ -26,14 +26,14 @@ class PT_BR_Rec(object):
         return true_labels
            
     def cluster_obs(self):
-        dists = em(self.bowObs, np.array(self.rnd_priors(self.nDists, self.vocabSize)), iterations=200)
+        dists = em(self.bowObs, np.array(self.rnd_priors(self.nDists, self.vocabSize)), iterations=200, pmfType = "log")
         hyp_labels = []
         for obs in self.bowObs:
             maxProb = 0.
             label = 0
             hyp_label = 0
             for dist in dists:
-                m = Multinomial(dist)
+                m = Multinomial(dist, "log")
                 prob = m.pmf(obs)
                 if prob > maxProb:
                     maxProb = prob
@@ -49,4 +49,4 @@ class PT_BR_Rec(object):
         return np.array(priors)
     
 rec = PT_BR_Rec(["../../corpora/pt.txt", "../../corpora/br.txt"])
-rec.cluster_obs()
+#rec.cluster_obs()
