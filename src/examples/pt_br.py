@@ -3,11 +3,13 @@ Created on 14/05/2016
 
 @author: Mota
 '''
+from sklearn import metrics
+
 from em.multinomial import em, Multinomial
 import numpy as np
 from utils.nlp import nlp_processing
+from utils.plot_posterior import plotPosterior
 from utils.rnd import make_rand_vector
-from sklearn import metrics
 
 
 class PT_BR_Rec(object):
@@ -26,7 +28,7 @@ class PT_BR_Rec(object):
         return true_labels
            
     def cluster_obs(self):
-        dists = em(self.bowObs, np.array(self.rnd_priors(self.nDists, self.vocabSize)), iterations=200, pmfType = "log")
+        dists = em(self.bowObs, np.array(self.rnd_priors(self.nDists, self.vocabSize)), iterations=30, pmfType = "log")
         hyp_labels = []
         for obs in self.bowObs:
             maxProb = 0.
@@ -40,7 +42,11 @@ class PT_BR_Rec(object):
                     hyp_label = label
                 label += 1
             hyp_labels.append(hyp_label)
-        print "ARI: %f" % (metrics.adjusted_rand_score(self.true_labels, hyp_labels)) 
+        print "ARI: %f" % (metrics.adjusted_rand_score(self.true_labels, hyp_labels))
+        inv_vocab = {v: k for k, v in self.vocabDic.items()}
+        plotPosterior(dists, inv_vocab, 5, ['r', 'b'])
+        print dists[0]
+        print dists[1]
         
     def rnd_priors(self, nDists, vocabSize):
         priors = []
@@ -49,4 +55,4 @@ class PT_BR_Rec(object):
         return np.array(priors)
     
 rec = PT_BR_Rec(["../../corpora/pt.txt", "../../corpora/br.txt"])
-#rec.cluster_obs()
+rec.cluster_obs()

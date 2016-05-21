@@ -1,5 +1,6 @@
 import math
 import numpy as np
+import matplotlib.pyplot as plt
 
 class Multinomial(object):
     def __init__(self, params, pmfType = "reg"):
@@ -41,19 +42,24 @@ class Multinomial(object):
     
 def em(obsMat, priorsVecs, tol=1e-6, iterations=10000, pmfType = "reg"):
     iteration = 0
+    priorLen = float(len(priorsVecs[0]))
+    delta_change_arr = []
     while iteration < iterations:
-        print "Iteration %d of EM" % (iteration)
+        #print "Iteration %d of EM" % (iteration)
         new_priorVecs = multinomial_E_M_steps(obsMat, priorsVecs, pmfType)
+        delta_change = np.sum(np.abs(priorsVecs[0]-new_priorVecs[0]))/priorLen
+        print "Iteration %d of EM Prior convergence: %f" % (iteration, delta_change)
+        delta_change_arr.append(delta_change)
         priorsVecs = new_priorVecs
         iteration+=1
-        '''
-        delta_change = np.abs(priorsVecs[0]-new_priorVecs[0])
         if delta_change < tol:
             break
         else:
             priorsVecs = new_priorVecs
             iteration+=1
-        '''
+    plt.plot(range(len(delta_change_arr)), delta_change_arr, 'ro')
+    plt.savefig('../../prior_conv.png')
+    plt.close()
     return priorsVecs
             
 def multinomial_E_M_steps(obsMat, priorsVecs, pmfType = "reg"):
